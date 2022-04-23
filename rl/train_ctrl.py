@@ -34,6 +34,8 @@ best_mean_reward, n_steps = -np.inf, 0
 
 
 def main(cfg):
+
+    print("here")
     if (cfg.problem not in ["binary_ctrl", "sokoban_ctrl", "zelda_ctrl", "smb_ctrl", "MicropolisEnv", "RCT"]) and \
         ("minecraft" not in cfg.problem):
         raise Exception(
@@ -90,7 +92,7 @@ def main(cfg):
     trainer_config = {
         'framework': 'torch',
         'num_workers': num_workers,
-        'num_gpus': 1,
+        'num_gpus': 0,
         'env_config': vars(cfg),  # Maybe env should get its own config? (A subset of the original?)
         'num_envs_per_worker': 20 if not cfg.infer else 1,
         'render_env': cfg.render,

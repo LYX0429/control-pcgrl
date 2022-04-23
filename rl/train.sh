@@ -8,7 +8,7 @@
 #SBATCH --mem=30GB
 #SBATCH --job-name=pcgrl_3D
 #SBATCH --mail-type=BEGIN,END
-#SBATCH --mail-user=zj2086@nyu.edu
+#SBATCH --mail-user=yl8616@nyu.edu
 #SBATCH --output=rl_runs/pcgrl_0_%j.out
 
 cd /scratch/zj2086/control-pcgrl

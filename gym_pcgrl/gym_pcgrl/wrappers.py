@@ -1,7 +1,9 @@
 from pdb import set_trace as TT
 from gym_pcgrl.envs.helper import get_int_prob, get_string_map
 from gym_pcgrl.envs import helper_3D
+from gym_pcgrl.ICM import ICM
 
+import copy
 import numpy as np
 
 import gym
@@ -369,6 +371,9 @@ class Cropped(gym.Wrapper):
         self.size = crop_size
         self.pad = crop_size // 2
         self.pad_value = pad_value
+        
+        self.icm = ICM('binary')
+        self.last_obs = None
 
         self.observation_space = gym.spaces.Dict({})
 
@@ -382,6 +387,16 @@ class Cropped(gym.Wrapper):
     def step(self, action, **kwargs):
         action = get_action(action)
         obs, reward, done, info = self.env.step(action, **kwargs)
+        
+        if self.last_obs != None:
+            a = obs['pos'][:]
+            a = np.append(a, action)
+            icm_reward = self.icm.predict(self.last_obs['map'], a, obs['map'])
+            if not reward:
+                reward = 0
+            reward = reward + icm_reward
+        self.last_obs = copy.copy(obs)
+        
         obs = self.transform(obs)
 
         return obs, reward, done, info

@@ -9,7 +9,7 @@ numba
 psutil
 imageio
 graphviz
-grpc  # For rendering minecraft via Evocraft
+# grpc  # For rendering minecraft via Evocraft
 numpy==1.21  # numba requires this version or lower
 opencv-python
 gym
