@@ -119,7 +119,7 @@ class ToImage(gym.Wrapper):
     def step(self, action, **kwargs):
         action = get_action(action)
         obs, reward, done, info = self.env.step(action, **kwargs)
-        obs = self.transform(obs)
+        # obs = self.transform(obs)
 
         return obs, reward, done, info
 
@@ -372,8 +372,6 @@ class Cropped(gym.Wrapper):
         self.pad = crop_size // 2
         self.pad_value = pad_value
         
-        self.icm = ICM('binary')
-        self.last_obs = None
 
         self.observation_space = gym.spaces.Dict({})
 
@@ -387,15 +385,6 @@ class Cropped(gym.Wrapper):
     def step(self, action, **kwargs):
         action = get_action(action)
         obs, reward, done, info = self.env.step(action, **kwargs)
-        
-        if self.last_obs != None:
-            a = obs['pos'][:]
-            a = np.append(a, action)
-            icm_reward = self.icm.predict(self.last_obs['map'], a, obs['map'])
-            if not reward:
-                reward = 0
-            reward = reward + icm_reward
-        self.last_obs = copy.copy(obs)
         
         obs = self.transform(obs)
 

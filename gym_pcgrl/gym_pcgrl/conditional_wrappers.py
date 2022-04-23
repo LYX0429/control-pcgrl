@@ -7,6 +7,7 @@ from pdb import set_trace as TT
 import gym
 import numpy as np
 
+from gym_pcgrl.ICM import ICM
 # from opensimplex import OpenSimplex
 from gym_pcgrl.envs.helper import get_range_reward
 
@@ -160,6 +161,10 @@ class ConditionalWrapper(gym.Wrapper):
         self.last_loss = None
         self.ctrl_loss_metrics = ctrl_loss_metrics
         self.max_loss = self.get_max_loss(ctrl_metrics=ctrl_loss_metrics)
+        
+        
+        self.icm = ICM('binary')
+        self.last_obs = None
 
 
     def get_control_bounds(self):
@@ -262,8 +267,9 @@ class ConditionalWrapper(gym.Wrapper):
             self.win.step()
 
         ob, rew, done, info = super().step(action, **kwargs)
+        obs = copy.copy(ob)
+        ob = self.transform(ob)
         self.metrics = self.unwrapped._rep_stats
-
         # Add target values of metrics of interest to the agent's obervation, so that it can learn to reproduce them 
         # while editing the level. 
         if self.conditional:
@@ -272,6 +278,18 @@ class ConditionalWrapper(gym.Wrapper):
         # Provide reward only at the last step
         reward = self.get_reward()  # if done else 0
 
+        # ICM
+        if self.last_obs != None:
+            a = obs['pos'][:]
+            a = np.append(a, action)
+            new_map = self.icm.decode(obs['map'])
+            old_map = self.icm.decode(self.last_obs['map'])
+            icm_reward = self.icm.predict(old_map, a, new_map)
+            reward = reward + icm_reward
+        self.last_obs = copy.copy(obs)
+        # ICM
+        
+        
         self.last_metrics = self.metrics
         self.last_metrics = copy.deepcopy(self.metrics)
         self.n_step += 1
@@ -293,6 +311,27 @@ class ConditionalWrapper(gym.Wrapper):
     def get_cond_trgs(self):
         return self.metric_trgs
 
+    def transform(self, obs):
+        final = np.empty([])
+
+        for n in self.names:
+#           if len(self.env.observation_space.spaces[n].shape) == 3:
+            if len(final.shape) == 0:
+                final = obs[n].reshape(*self.shape[:-1], -1)
+            else:
+                final = np.append(
+                    final, obs[n].reshape(*self.shape[:-1], -1), axis=-1
+                )
+#           else:
+#               if len(final.shape) == 0:
+#                   final = obs[n].reshape(self.shape[0], self.shape[1], self.shape[2], -1)
+#               else:
+#                   final = np.append(
+#                       final, obs[n].reshape(self.shape[0], self.shape[1], self.shape[2], -1), axis=2
+#                   )
+
+        return final
+        
     def get_cond_bounds(self):
         return self.cond_bounds
 
