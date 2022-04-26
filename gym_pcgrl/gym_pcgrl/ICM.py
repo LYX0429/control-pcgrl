@@ -15,12 +15,12 @@ class TinyModel(torch.nn.Module):
     def __init__(self, n, m):
         super(TinyModel, self).__init__()
 
-        # self.linear1 = torch.nn.Linear(n * m + 3, 256)
-        self.linear1 = torch.nn.Linear(2 + 3, 256)
+        self.linear1 = torch.nn.Linear(n * m + 3, 256)
+        # self.linear1 = torch.nn.Linear(2 + 3, 256)
         self.activation = torch.nn.ReLU()
         self.linear2 = torch.nn.Linear(256, 288)
-        # self.linear3 = torch.nn.Linear(288, n * m)
-        self.linear3 = torch.nn.Linear(288, 2)
+        self.linear3 = torch.nn.Linear(288, n * m)
+        # self.linear3 = torch.nn.Linear(288, 2)
 
     def forward(self, x):
         x = self.linear1(x)
