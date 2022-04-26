@@ -279,23 +279,23 @@ class ConditionalWrapper(gym.Wrapper):
         reward = self.get_reward()  # if done else 0
 
         # ICM entire map
-        # if self.last_obs != None:
-            # a = obs['pos'][:]
-            # a = np.append(a, action)
-            # new_map = self.icm.decode(obs['map'])
-            # old_map = self.icm.decode(self.last_obs['map'])
-            # icm_reward = self.icm.predict(old_map, a, new_map)
-            # reward = reward + icm_reward
-        # self.last_obs = copy.copy(obs)
+        if self.last_obs != None:
+            a = obs['pos'][:]
+            a = np.append(a, action)
+            new_map = self.icm.decode(obs['map'])
+            old_map = self.icm.decode(self.last_obs['map'])
+            icm_reward = self.icm.predict(old_map, a, new_map)
+            reward = reward + icm_reward
+        self.last_obs = copy.copy(obs)
         
         # ICM path length
         icm_input = np.array([self.metrics['regions'], self.metrics['path-length']])
-        if isinstance(self.last_obs, np.ndarray):
-            a = obs['pos'][:]
-            a = np.append(a, action)
-            icm_reward = self.icm.predict(icm_input, a, self.last_obs)
-            reward = reward + icm_reward
-        self.last_obs = copy.copy(icm_input)
+        # if isinstance(self.last_obs, np.ndarray):
+        #    a = obs['pos'][:]
+        #    a = np.append(a, action)
+        #    icm_reward = self.icm.predict(icm_input, a, self.last_obs)
+        #    reward = reward + icm_reward
+        # self.last_obs = copy.copy(icm_input)
         
         
         # ICM
