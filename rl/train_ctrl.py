@@ -94,7 +94,7 @@ def main(cfg):
         'num_workers': num_workers,
         'num_gpus': 1,
         'env_config': vars(cfg),  # Maybe env should get its own config? (A subset of the original?)
-        'num_envs_per_worker': 20 if not cfg.infer else 1,
+        'num_envs_per_worker': 10 if not cfg.infer else 1,
         'render_env': cfg.render,
         'model': {
             'custom_model': 'feedforward',

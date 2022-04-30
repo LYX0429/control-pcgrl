@@ -16,11 +16,11 @@ class TinyModel(torch.nn.Module):
         super(TinyModel, self).__init__()
 
         self.linear1 = torch.nn.Linear(n * m + 3, 256)
-        # self.linear1 = torch.nn.Linear(2 + 3, 256)
+        #self.linear1 = torch.nn.Linear(2 + 3, 256)
         self.activation = torch.nn.ReLU()
         self.linear2 = torch.nn.Linear(256, 288)
         self.linear3 = torch.nn.Linear(288, n * m)
-        # self.linear3 = torch.nn.Linear(288, 2)
+        #self.linear3 = torch.nn.Linear(288, 2)
 
     def forward(self, x):
         x = self.linear1(x)
@@ -35,9 +35,13 @@ class ICM():
     
     def __init__(self, game):
         if game == 'binary':
-            n = 32
-            m = 32
+            n = 16
+            m = 16
         self.model = TinyModel(n, m)
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.model.to(self.device)
+        print(next(self.model.parameters()).is_cuda)
+
         self.criterion = MSELoss()
         self.optimizer = SGD(self.model.parameters(), lr=0.01, momentum=0.9)
     
@@ -49,8 +53,10 @@ class ICM():
         
         x = Tensor(x)
         y = Tensor(y)
-        
-        for epoch in range(100):
+        x = x.to(self.device)
+        y = y.to(self.device)
+
+        for epoch in range(11):
             self.optimizer.zero_grad()
             yhat = self.model(x)
             loss = self.criterion(yhat, y)
@@ -68,13 +74,14 @@ class ICM():
         return np.array(obs)
 
 if __name__ == '__main__':
-    n = 5
-    m = 5
+
+    n = 16
+    m = 16
     
-    icm = ICM(n, m)
+    icm = ICM('binary')
     
     dataSet = []
-    num = 1000
+    num = 10000
     for _ in range(num):
         data = []
         for i in range(n):

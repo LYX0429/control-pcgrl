@@ -212,7 +212,7 @@ if __name__ == "__main__":
     opts.add_argument(
         "--n_cpu",
         type=int,
-        default=12,
+        default=1,
     )
     opts.add_argument(
         "--load",

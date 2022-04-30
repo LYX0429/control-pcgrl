@@ -118,10 +118,10 @@ class ToImage(gym.Wrapper):
 
     def step(self, action, **kwargs):
         action = get_action(action)
-        obs, reward, done, info = self.env.step(action, **kwargs)
+        obs, reward, done, info, pure = self.env.step(action, **kwargs)
         # obs = self.transform(obs)
 
-        return obs, reward, done, info
+        return obs, reward, done, info, pure
 
     def reset(self):
         obs = self.env.reset()
@@ -236,10 +236,10 @@ class OneHotEncoding(gym.Wrapper):
 
     def step(self, action, **kwargs):
         action = get_action(action)
-        obs, reward, done, info = self.env.step(action, **kwargs)
+        obs, reward, done, info, pure = self.env.step(action, **kwargs)
         obs = self.transform(obs)
 
-        return obs, reward, done, info
+        return obs, reward, done, info, pure
 
     def reset(self):
         obs = self.env.reset()
@@ -385,10 +385,10 @@ class Cropped(gym.Wrapper):
     def step(self, action, **kwargs):
         action = get_action(action)
         obs, reward, done, info = self.env.step(action, **kwargs)
-        
+        pure = copy.copy(obs)
         obs = self.transform(obs)
 
-        return obs, reward, done, info
+        return obs, reward, done, info, pure
 
     def reset(self):
         obs = self.env.reset()

@@ -165,6 +165,7 @@ class ConditionalWrapper(gym.Wrapper):
         
         self.icm = ICM('binary')
         self.last_obs = None
+        self.icm_count = 0
 
 
     def get_control_bounds(self):
@@ -266,8 +267,7 @@ class ConditionalWrapper(gym.Wrapper):
         if self.render_gui:
             self.win.step()
 
-        ob, rew, done, info = super().step(action, **kwargs)
-        obs = copy.copy(ob)
+        ob, rew, done, info, pure = super().step(action, **kwargs)
         ob = self.transform(ob)
         self.metrics = self.unwrapped._rep_stats
         # Add target values of metrics of interest to the agent's obervation, so that it can learn to reproduce them 
@@ -277,24 +277,27 @@ class ConditionalWrapper(gym.Wrapper):
 
         # Provide reward only at the last step
         reward = self.get_reward()  # if done else 0
-
         # ICM entire map
         if self.last_obs != None:
-            a = obs['pos'][:]
+            a = pure['pos'][:]
             a = np.append(a, action)
-            new_map = self.icm.decode(obs['map'])
-            old_map = self.icm.decode(self.last_obs['map'])
+            new_map = pure['map']
+            old_map = self.last_obs['map']
             icm_reward = self.icm.predict(old_map, a, new_map)
             reward = reward + icm_reward
-        self.last_obs = copy.copy(obs)
+        self.icm_count += 1
+        if self.icm_count > 100:
+            self.icm_count -= 100
+            print(reward, icm_reward)
+        self.last_obs = copy.copy(pure)
         
         # ICM path length
-        icm_input = np.array([self.metrics['regions'], self.metrics['path-length']])
+        # icm_input = np.array([self.metrics['regions'], self.metrics['path-length']])
         # if isinstance(self.last_obs, np.ndarray):
-        #    a = obs['pos'][:]
-        #    a = np.append(a, action)
-        #    icm_reward = self.icm.predict(icm_input, a, self.last_obs)
-        #    reward = reward + icm_reward
+        #     a = obs['pos'][:]
+        #     a = np.append(a, action)
+        #     icm_reward = self.icm.predict(icm_input, a, self.last_obs)
+        #     reward = reward + icm_reward
         # self.last_obs = copy.copy(icm_input)
         
         
