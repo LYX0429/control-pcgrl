@@ -9,6 +9,14 @@
 #   'smb_ctrl',
   ],
 
+  "icm": [
+#   'no_intrinsic',
+    'no_extrinsic',
+    'both_10',
+    'both_20',
+    'both_30',
+  ],
+  
   # Pairs of [representation, model] hyperparameters. If model is None, then revert to a default model class.
   "representations_models": [
 #       ["narrow3D", null],

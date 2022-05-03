@@ -4,9 +4,9 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=12
 #SBATCH --gres=gpu:1
-#SBATCH --time=48:00:00
+#SBATCH --time=168:00:00
 #SBATCH --mem=30GB
-#SBATCH --job-name=pcgrl_yl_2
+#SBATCH --job-name=pcgrl_yl
 #SBATCH --mail-type=BEGIN,END
 #SBATCH --mail-user=yl8616@nyu.edu
 #SBATCH --output=rl_runs/pcgrl_0_%j.out

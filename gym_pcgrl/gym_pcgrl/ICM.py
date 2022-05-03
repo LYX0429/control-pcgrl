@@ -33,10 +33,13 @@ class TinyModel(torch.nn.Module):
         
 class ICM():
     
-    def __init__(self, game):
+    def __init__(self, game, path):
         if game == 'binary':
             n = 16
             m = 16
+        self.weight = 20
+        self.reward_type = "both"
+        self.path = path
         self.model = TinyModel(n, m)
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
@@ -64,7 +67,7 @@ class ICM():
             self.optimizer.step()
         
         reward = loss.item()
-        return reward
+        return reward * self.weight
     
     def decode(self, ob):
         obs = [[0 for j in range(len(ob[0]))] for i in range(len(ob))]
@@ -72,6 +75,9 @@ class ICM():
             for j in range(len(ob[0])):
                 obs[i][j] = np.argmax(ob[i][j])
         return np.array(obs)
+        
+    def save(self):
+        torch.save(self.model.state_dict(), self.path)
 
 if __name__ == '__main__':
 

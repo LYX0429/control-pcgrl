@@ -162,8 +162,19 @@ class ConditionalWrapper(gym.Wrapper):
         self.ctrl_loss_metrics = ctrl_loss_metrics
         self.max_loss = self.get_max_loss(ctrl_metrics=ctrl_loss_metrics)
         
-        
-        self.icm = ICM('binary')
+        print(kwargs)
+        self.icm = ICM('binary', 'rl_runs/' + kwargs['env_name'] + "_" + kwargs['icm'] + '.model')
+        reward_type = kwargs['icm']
+        self.icm.reward_type = reward_type
+        if reward_type == "both_10":
+            self.icm.weight = 10
+            self.icm.reward_type = "both"
+        elif reward_type == "both_20":
+            self.icm.weight = 20
+            self.icm.reward_type = "both"
+        elif reward_type == "both_30":
+            self.icm.weight = 30
+            self.icm.reward_type = "both"
         self.last_obs = None
         self.icm_count = 0
 
@@ -278,18 +289,39 @@ class ConditionalWrapper(gym.Wrapper):
         # Provide reward only at the last step
         reward = self.get_reward()  # if done else 0
         # ICM entire map
-        if self.last_obs != None:
-            a = pure['pos'][:]
-            a = np.append(a, action)
-            new_map = pure['map']
-            old_map = self.last_obs['map']
-            icm_reward = self.icm.predict(old_map, a, new_map)
-            reward = reward + icm_reward
-        self.icm_count += 1
-        if self.icm_count > 100:
-            self.icm_count -= 100
-            print(reward, icm_reward)
-        self.last_obs = copy.copy(pure)
+        
+        if self.icm.reward_type == "both":
+            print(self.icm.weight)
+            if self.last_obs != None:
+                a = pure['pos'][:]
+                a = np.append(a, action)
+                new_map = pure['map']
+                old_map = self.last_obs['map']
+                icm_reward = self.icm.predict(old_map, a, new_map)
+                old_reward = reward
+                reward = old_reward + icm_reward
+            self.icm_count += 1
+            if self.icm_count > 1000:
+                self.icm_count -= 1000
+                self.icm.save()
+                print(old_reward, icm_reward)
+            self.last_obs = copy.copy(pure)
+        elif self.icm.reward_type == "no_extrinsic":
+            if self.last_obs != None:
+                a = pure['pos'][:]
+                a = np.append(a, action)
+                new_map = pure['map']
+                old_map = self.last_obs['map']
+                icm_reward = self.icm.predict(old_map, a, new_map)
+                old_reward = reward
+                reward = icm_reward
+            self.icm_count += 1
+            if self.icm_count > 1000:
+                self.icm_count -= 1000
+                self.icm.save()
+                print(old_reward, icm_reward)
+            self.last_obs = copy.copy(pure)
+        
         
         # ICM path length
         # icm_input = np.array([self.metrics['regions'], self.metrics['path-length']])
