@@ -48,7 +48,7 @@ def main(cfg):
 
     cfg.env_name = get_env_name(cfg.problem, cfg.representation)
     print('env name: ', cfg.env_name)
-    exp_name = get_exp_name(cfg)
+    exp_name = get_exp_name(cfg) + "_" + cfg.icm
     exp_name_id = f'{exp_name}_{cfg.experiment_id}'
     log_dir = f'rl_runs/{exp_name_id}_log'
 

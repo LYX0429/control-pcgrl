@@ -162,7 +162,6 @@ class ConditionalWrapper(gym.Wrapper):
         self.ctrl_loss_metrics = ctrl_loss_metrics
         self.max_loss = self.get_max_loss(ctrl_metrics=ctrl_loss_metrics)
         
-        print(kwargs)
         self.icm = ICM('binary', 'rl_runs/' + kwargs['env_name'] + "_" + kwargs['icm'] + '.model')
         reward_type = kwargs['icm']
         self.icm.reward_type = reward_type
@@ -291,7 +290,6 @@ class ConditionalWrapper(gym.Wrapper):
         # ICM entire map
         
         if self.icm.reward_type == "both":
-            print(self.icm.weight)
             if self.last_obs != None:
                 a = pure['pos'][:]
                 a = np.append(a, action)
