@@ -166,16 +166,18 @@ class ConditionalWrapper(gym.Wrapper):
         reward_type = kwargs['icm']
         self.icm.reward_type = reward_type
         if reward_type == "both_10":
-            self.icm.weight = 10
+            self.icm.weight = 1
             self.icm.reward_type = "both"
         elif reward_type == "both_20":
-            self.icm.weight = 20
+            self.icm.weight = 5
             self.icm.reward_type = "both"
         elif reward_type == "both_30":
-            self.icm.weight = 30
+            self.icm.weight = 10
             self.icm.reward_type = "both"
         self.last_obs = None
         self.icm_count = 0
+        if self.infer:
+            self.icm.reward_type = "none"
 
 
     def get_control_bounds(self):
@@ -230,6 +232,8 @@ class ConditionalWrapper(gym.Wrapper):
         self.last_metrics = copy.deepcopy(self.metrics)
         self.last_loss = self.get_loss()
         self.n_step = 0
+        
+        self.last_obs = None
 
         return ob
 
@@ -288,16 +292,18 @@ class ConditionalWrapper(gym.Wrapper):
         # Provide reward only at the last step
         reward = self.get_reward()  # if done else 0
         # ICM entire map
-        
         if self.icm.reward_type == "both":
             if self.last_obs != None:
-                a = pure['pos'][:]
+                a = self.last_obs['pos'][:]
                 a = np.append(a, action)
                 new_map = pure['map']
                 old_map = self.last_obs['map']
                 icm_reward = self.icm.predict(old_map, a, new_map)
                 old_reward = reward
                 reward = old_reward + icm_reward
+                reward = reward / self.icm.weight
+
+                print(old_reward, icm_reward, reward)
             self.icm_count += 1
             if self.icm_count > 1000:
                 self.icm_count -= 1000
@@ -306,7 +312,7 @@ class ConditionalWrapper(gym.Wrapper):
             self.last_obs = copy.copy(pure)
         elif self.icm.reward_type == "no_extrinsic":
             if self.last_obs != None:
-                a = pure['pos'][:]
+                a = self.last_obs['pos'][:]
                 a = np.append(a, action)
                 new_map = pure['map']
                 old_map = self.last_obs['map']
@@ -320,7 +326,7 @@ class ConditionalWrapper(gym.Wrapper):
                 print(old_reward, icm_reward)
             self.last_obs = copy.copy(pure)
         
-        
+        print()
         # ICM path length
         # icm_input = np.array([self.metrics['regions'], self.metrics['path-length']])
         # if isinstance(self.last_obs, np.ndarray):

@@ -2,6 +2,7 @@
 import numpy as np
 import random
 import torch
+import copy
 from torch.nn import Linear
 from torch.nn import ReLU
 from torch.nn import Sigmoid
@@ -37,7 +38,7 @@ class ICM():
         if game == 'binary':
             n = 16
             m = 16
-        self.weight = 20
+        self.weight = 1
         self.reward_type = "both"
         self.path = path
         self.model = TinyModel(n, m)
@@ -50,9 +51,10 @@ class ICM():
     
     def predict(self, state, action, next_state):
         x = state.flatten()
+        y = next_state.flatten()
         x = np.append(x, action)
-        x = np.array([x])
-        y = np.array([next_state.flatten()])
+        x = np.array(x)
+        y = np.array(y)
         
         x = Tensor(x)
         y = Tensor(y)
@@ -84,22 +86,32 @@ if __name__ == '__main__':
     n = 16
     m = 16
     
-    icm = ICM('binary')
+    icm = ICM('binary', './')
+    # icm.model.load_state_dict(torch.load("binary_ctrl-narrow-v0_both_30.model", map_location=torch.device('cpu')))
     
     dataSet = []
+    actionSet = []
+    valSet = []
     num = 10000
-    for _ in range(num):
+    for x in range(num):
         data = []
         for i in range(n):
             for j in range(m):
-                data.append(random.random() / 2)
+                data.append(random.randint(0, 1))
+                
+        action = [random.randint(0, 15), random.randint(0, 15), random.randint(0, 2)]
+        
+        val = copy.copy(data)
+        if action[2] == 1:
+            val[action[1] * 16 + action[0]] = 0
+        elif action[2] == 2:
+            val[action[1] * 16 + action[0]] = 1
+            
+        actionSet.append(action)
         dataSet.append(data)
-    dataSet = np.array(dataSet)
-    
-    valSet = []
-    for x in range(num):
-        val = dataSet[x] * 2
         valSet.append(val)
+    dataSet = np.array(dataSet)
+    actionSet = np.array(actionSet)
     valSet = np.array(valSet)
     
     for i in range(num):
