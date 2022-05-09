@@ -174,7 +174,12 @@ class ConditionalWrapper(gym.Wrapper):
         elif reward_type == "both_30":
             self.icm.weight = 10
             self.icm.reward_type = "both"
+        if reward_type == "no_extrinsic_path":
+            self.icm.reward_type = "no_extrinsic_path"
+        elif reward_type == "both_1_path":
+            self.icm.reward_type = "both"
         self.last_obs = None
+        self.last_path = []
         self.icm_count = 0
         if self.infer:
             self.icm.reward_type = "none"
@@ -234,6 +239,7 @@ class ConditionalWrapper(gym.Wrapper):
         self.n_step = 0
         
         self.last_obs = None
+        self.last_path = []
 
         return ob
 
@@ -296,37 +302,47 @@ class ConditionalWrapper(gym.Wrapper):
             if self.last_obs != None:
                 a = self.last_obs['pos'][:]
                 a = np.append(a, action)
-                new_map = pure['map']
-                old_map = self.last_obs['map']
-                icm_reward = self.icm.predict(old_map, a, new_map)
+                # new_map = pure['map']
+                # old_map = self.last_obs['map']
+                new_map = self.icm.build_map(self.unwrapped._prob.path_coords)
+                old_map = self.icm.build_map(self.last_path)
+                if isinstance(new_map, np.ndarray) or isinstance(old_map, np.ndarray):
+                    icm_reward = self.icm.predict(old_map, a, new_map)
+                else:
+                    icm_reward = 0
                 old_reward = reward
                 reward = old_reward + icm_reward
                 reward = reward / self.icm.weight
 
-                print(old_reward, icm_reward, reward)
-            self.icm_count += 1
-            if self.icm_count > 1000:
-                self.icm_count -= 1000
-                self.icm.save()
-                print(old_reward, icm_reward)
+                self.icm_count += 1
+                if self.icm_count > 1000:
+                    self.icm_count -= 1000
+                    self.icm.save()
+                    print(old_reward, icm_reward)
             self.last_obs = copy.copy(pure)
+            self.last_path = copy.copy(self.unwrapped._prob.path_coords)
         elif self.icm.reward_type == "no_extrinsic":
             if self.last_obs != None:
                 a = self.last_obs['pos'][:]
                 a = np.append(a, action)
-                new_map = pure['map']
-                old_map = self.last_obs['map']
-                icm_reward = self.icm.predict(old_map, a, new_map)
+                # new_map = pure['map']
+                # old_map = self.last_obs['map']
+                new_map = self.icm.build_map(self.unwrapped._prob.path_coords)
+                old_map = self.icm.build_map(self.last_path)
+                if isinstance(new_map, np.ndarray) or isinstance(old_map, np.ndarray):
+                    icm_reward = self.icm.predict(old_map, a, new_map)
+                else:
+                    icm_reward = 0
                 old_reward = reward
                 reward = icm_reward
-            self.icm_count += 1
-            if self.icm_count > 1000:
-                self.icm_count -= 1000
-                self.icm.save()
-                print(old_reward, icm_reward)
+                self.icm_count += 1
+                if self.icm_count > 1000:
+                    self.icm_count -= 1000
+                    self.icm.save()
+                    print(old_reward, icm_reward)
             self.last_obs = copy.copy(pure)
+            self.last_path = copy.copy(self.unwrapped._prob.path_coords)
         
-        print()
         # ICM path length
         # icm_input = np.array([self.metrics['regions'], self.metrics['path-length']])
         # if isinstance(self.last_obs, np.ndarray):

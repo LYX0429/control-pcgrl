@@ -11,10 +11,12 @@
 
   "icm": [
 #   'no_intrinsic',
-    'no_extrinsic',
-    'both_10',
-    'both_20',
-    'both_30',
+#   'no_extrinsic',
+#   'both_10',
+#   'both_20',
+#   'both_30',
+    'no_extrinsic_path',
+    'both_1_path',
   ],
   
   # Pairs of [representation, model] hyperparameters. If model is None, then revert to a default model class.

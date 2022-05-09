@@ -36,12 +36,12 @@ class ICM():
     
     def __init__(self, game, path):
         if game == 'binary':
-            n = 16
-            m = 16
+            self.n = 16
+            self.m = 16
         self.weight = 1
         self.reward_type = "both"
         self.path = path
-        self.model = TinyModel(n, m)
+        self.model = TinyModel(self.n, self.m)
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
         print(next(self.model.parameters()).is_cuda)
@@ -78,6 +78,14 @@ class ICM():
                 obs[i][j] = np.argmax(ob[i][j])
         return np.array(obs)
         
+    def build_map(self, path):
+        if not isinstance(path, np.ndarray):
+            return None
+        m = [[0 for i in range(self.m)] for i in range(self.n)]
+        for x, y in path:
+            m[x][y] = 1
+        return np.array(m)
+    
     def save(self):
         torch.save(self.model.state_dict(), self.path)
 
@@ -86,13 +94,13 @@ if __name__ == '__main__':
     n = 16
     m = 16
     
-    icm = ICM('binary', './')
-    # icm.model.load_state_dict(torch.load("binary_ctrl-narrow-v0_both_30.model", map_location=torch.device('cpu')))
+    icm = ICM('binary', './icm_test.model')
+    icm.model.load_state_dict(torch.load("./icm_test.model", map_location=torch.device('cpu')))
     
     dataSet = []
     actionSet = []
     valSet = []
-    num = 10000
+    num = 1000
     for x in range(num):
         data = []
         for i in range(n):
@@ -117,4 +125,5 @@ if __name__ == '__main__':
     for i in range(num):
         reward = icm.predict(dataSet[i], np.array([1,2,3]), valSet[i])
         print(reward)
+    icm.save()
 
